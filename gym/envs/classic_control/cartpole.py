@@ -63,16 +63,19 @@ class CartPoleEnv(gym.Env):
         'video.frames_per_second': 50
     }
 
-    def __init__(self):
-        self.gravity = 9.8
+    def __init__(self, gravity=9.8, force_mag=10.0):
+        self.gravity = gravity
         self.masscart = 1.0
         self.masspole = 0.1
         self.total_mass = (self.masspole + self.masscart)
         self.length = 0.5  # actually half the pole's length
         self.polemass_length = (self.masspole * self.length)
-        self.force_mag = 10.0
+        self.force_mag = force_mag
         self.tau = 0.02  # seconds between state updates
         self.kinematics_integrator = 'euler'
+
+        print("self.gravity:", self.gravity)
+        print("self.force_mag:", self.force_mag)
 
         # Angle at which to fail the episode
         self.theta_threshold_radians = 12 * 2 * math.pi / 360
