@@ -57,15 +57,18 @@ class MountainCarEnv(gym.Env):
         'video.frames_per_second': 30
     }
 
-    def __init__(self, goal_velocity=0):
+    def __init__(self, goal_velocity=0, gravity=0.0025, force=0.001):
         self.min_position = -1.2
         self.max_position = 0.6
         self.max_speed = 0.07
         self.goal_position = 0.5
         self.goal_velocity = goal_velocity
 
-        self.force = 0.001
-        self.gravity = 0.0025
+        self.force = force
+        self.gravity = gravity
+
+        print("gravity:", self.gravity)
+        print("force:", self.force)
 
         self.low = np.array(
             [self.min_position, -self.max_speed], dtype=np.float32
