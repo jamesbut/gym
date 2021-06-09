@@ -29,7 +29,7 @@ class Continuous_MountainCarEnv(gym.Env):
         'video.frames_per_second': 30
     }
 
-    def __init__(self, goal_velocity=0):
+    def __init__(self, goal_velocity=0, power=0.0015):
         self.min_action = -1.0
         self.max_action = 1.0
         self.min_position = -1.2
@@ -37,7 +37,7 @@ class Continuous_MountainCarEnv(gym.Env):
         self.max_speed = 0.07
         self.goal_position = 0.45 # was 0.5 in gym, 0.45 in Arnaud de Broissia's version
         self.goal_velocity = goal_velocity
-        self.power = 0.0015
+        self.power = power
 
         self.low_state = np.array(
             [self.min_position, -self.max_speed], dtype=np.float32
@@ -67,7 +67,7 @@ class Continuous_MountainCarEnv(gym.Env):
         self.np_random, seed = seeding.np_random(seed)
         return [seed]
 
-    def step(self, action):
+    def step(self, action, **kwargs):
 
         position = self.state[0]
         velocity = self.state[1]
@@ -86,16 +86,45 @@ class Continuous_MountainCarEnv(gym.Env):
             position >= self.goal_position and velocity >= self.goal_velocity
         )
 
+        #Closest position to goal so far
+        if position > self.closest_pos_to_goal:
+            self.closest_pos_to_goal = position
+        if self.closest_pos_to_goal > self.goal_position:
+            self.closest_pos_to_goal = self.goal_position
+
+        '''
         reward = 0
         if done:
             reward = 100.0
         reward -= math.pow(action[0], 2) * 0.1
+        '''
+
+        #James' reward
+        reward = 0
+        #At the end of the episode give a reward equal to the closest position
+        #to goal so far
+        if kwargs['elapsed_steps'] >= kwargs['max_episode_steps']-1:
+            reward += self.closest_pos_to_goal
+        #When the goal has been reached
+        if done:
+            #No greater than 0.45
+            reward += self.closest_pos_to_goal
+            #Reward for doing it in a shorter time [0, 1]
+            reward += 1 - (kwargs['elapsed_steps'] / kwargs['max_episode_steps'])
+            #Reward for stopping slower at the flag
+            reward += 1 - (velocity / self.max_speed)
+
+        #print("Velociy:", velocity / self.max_speed)
 
         self.state = np.array([position, velocity])
         return self.state, reward, done, {}
 
     def reset(self):
-        self.state = np.array([self.np_random.uniform(low=-0.6, high=-0.4), 0])
+        #self.state = np.array([self.np_random.uniform(low=-0.6, high=-0.4), 0])
+        self.state = np.array([-0.5, 0])
+
+        self.closest_pos_to_goal = self.state[0]
+
         return np.array(self.state)
 
     def _height(self, xs):
