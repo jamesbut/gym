@@ -373,7 +373,7 @@ class BipedalWalker(gym.Env, EzPickle):
 
         return self.step(np.array([0,0,0,0]))[0]
 
-    def step(self, action):
+    def step(self, action, **kwargs):
         #self.hull.ApplyForceToCenter((0, 20), True) -- Uncomment this to receive a bit of stability help
         control_speed = False  # Should be easier as well
         if control_speed:
