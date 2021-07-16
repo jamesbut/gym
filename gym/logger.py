@@ -8,7 +8,7 @@ WARN = 30
 ERROR = 40
 DISABLED = 50
 
-MIN_LEVEL = 30
+MIN_LEVEL = 40
 
 def set_level(level):
     """
