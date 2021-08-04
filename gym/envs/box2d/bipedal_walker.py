@@ -42,7 +42,8 @@ SCALE  = 30.0   # affects how fast-paced the game is, forces should be adjusted 
 
 MOTORS_TORQUE = 80
 SPEED_HIP     = 4
-SPEED_KNEE    = 6
+#SPEED_KNEE has been moved to a member variable
+#SPEED_KNEE    = 6
 LIDAR_RANGE   = 160/SCALE
 
 INITIAL_RANDOM = 5
@@ -109,7 +110,7 @@ class BipedalWalker(gym.Env, EzPickle):
 
     hardcore = False
 
-    def __init__(self):
+    def __init__(self, speed_knee=6):
         EzPickle.__init__(self)
         self.seed()
         self.viewer = None
@@ -119,6 +120,8 @@ class BipedalWalker(gym.Env, EzPickle):
         self.hull = None
 
         self.prev_shaping = None
+
+        self.SPEED_KNEE = speed_knee
 
         self.fd_polygon = fixtureDef(
                         shape = polygonShape(vertices=
@@ -378,17 +381,17 @@ class BipedalWalker(gym.Env, EzPickle):
         control_speed = False  # Should be easier as well
         if control_speed:
             self.joints[0].motorSpeed = float(SPEED_HIP  * np.clip(action[0], -1, 1))
-            self.joints[1].motorSpeed = float(SPEED_KNEE * np.clip(action[1], -1, 1))
+            self.joints[1].motorSpeed = float(self.SPEED_KNEE * np.clip(action[1], -1, 1))
             self.joints[2].motorSpeed = float(SPEED_HIP  * np.clip(action[2], -1, 1))
-            self.joints[3].motorSpeed = float(SPEED_KNEE * np.clip(action[3], -1, 1))
+            self.joints[3].motorSpeed = float(self.SPEED_KNEE * np.clip(action[3], -1, 1))
         else:
             self.joints[0].motorSpeed     = float(SPEED_HIP     * np.sign(action[0]))
             self.joints[0].maxMotorTorque = float(MOTORS_TORQUE * np.clip(np.abs(action[0]), 0, 1))
-            self.joints[1].motorSpeed     = float(SPEED_KNEE    * np.sign(action[1]))
+            self.joints[1].motorSpeed     = float(self.SPEED_KNEE    * np.sign(action[1]))
             self.joints[1].maxMotorTorque = float(MOTORS_TORQUE * np.clip(np.abs(action[1]), 0, 1))
             self.joints[2].motorSpeed     = float(SPEED_HIP     * np.sign(action[2]))
             self.joints[2].maxMotorTorque = float(MOTORS_TORQUE * np.clip(np.abs(action[2]), 0, 1))
-            self.joints[3].motorSpeed     = float(SPEED_KNEE    * np.sign(action[3]))
+            self.joints[3].motorSpeed     = float(self.SPEED_KNEE    * np.sign(action[3]))
             self.joints[3].maxMotorTorque = float(MOTORS_TORQUE * np.clip(np.abs(action[3]), 0, 1))
 
         self.world.Step(1.0/FPS, 6*30, 2*30)
@@ -412,12 +415,12 @@ class BipedalWalker(gym.Env, EzPickle):
             self.joints[0].angle,   # This will give 1.1 on high up, but it's still OK (and there should be spikes on hiting the ground, that's normal too)
             self.joints[0].speed / SPEED_HIP,
             self.joints[1].angle + 1.0,
-            self.joints[1].speed / SPEED_KNEE,
+            self.joints[1].speed / self.SPEED_KNEE,
             1.0 if self.legs[1].ground_contact else 0.0,
             self.joints[2].angle,
             self.joints[2].speed / SPEED_HIP,
             self.joints[3].angle + 1.0,
-            self.joints[3].speed / SPEED_KNEE,
+            self.joints[3].speed / self.SPEED_KNEE,
             1.0 if self.legs[3].ground_contact else 0.0
             ]
         state += [l.fraction for l in self.lidar]
