@@ -42,6 +42,10 @@ SCALE = 30.0   # affects how fast-paced the game is, forces should be adjusted a
 MAIN_ENGINE_POWER = 13.0
 SIDE_ENGINE_POWER = 0.6
 
+#James
+LEFT_SIDE_ENGINE_POWER = 0.6
+RIGHT_SIDE_ENGINE_POWER = 0.6
+
 INITIAL_RANDOM = 1000.0   # Set 1500 to make game harder
 
 LANDER_POLY =[
@@ -243,7 +247,7 @@ class LunarLander(gym.Env, EzPickle):
         while self.particles and (all or self.particles[0].ttl < 0):
             self.world.DestroyBody(self.particles.pop(0))
 
-    def step(self, action):
+    def step(self, action, **env_kwargs):
         if self.continuous:
             action = np.clip(action, -1, +1).astype(np.float32)
         else:
@@ -292,10 +296,10 @@ class LunarLander(gym.Env, EzPickle):
             impulse_pos = (self.lander.position[0] + ox - tip[0] * 17/SCALE,
                            self.lander.position[1] + oy + tip[1] * SIDE_ENGINE_HEIGHT/SCALE)
             p = self._create_particle(0.7, impulse_pos[0], impulse_pos[1], s_power)
-            p.ApplyLinearImpulse((ox * SIDE_ENGINE_POWER * s_power, oy * SIDE_ENGINE_POWER * s_power),
+            p.ApplyLinearImpulse((ox * LEFT_SIDE_ENGINE_POWER * s_power, oy * RIGHT_SIDE_ENGINE_POWER * s_power),
                                  impulse_pos
                                  , True)
-            self.lander.ApplyLinearImpulse((-ox * SIDE_ENGINE_POWER * s_power, -oy * SIDE_ENGINE_POWER * s_power),
+            self.lander.ApplyLinearImpulse((-ox * LEFT_SIDE_ENGINE_POWER * s_power, -oy * RIGHT_SIDE_ENGINE_POWER * s_power),
                                            impulse_pos,
                                            True)
 
