@@ -110,9 +110,20 @@ class Continuous_MountainCarEnv(gym.Env):
             #No greater than 0.45
             reward += self.closest_pos_to_goal
             #Reward for doing it in a shorter time [0, 1]
-            reward += 1 - (kwargs['elapsed_steps'] / kwargs['max_episode_steps'])
+            time_reward = 1 - (kwargs['elapsed_steps'] / kwargs['max_episode_steps'])
+            reward += time_reward
             #Reward for stopping slower at the flag
-            reward += 1 - (velocity / self.max_speed)
+            flag_speed_reward = 1 - (velocity / self.max_speed)
+            #reward += (10 * flag_speed_reward)
+            reward += flag_speed_reward
+
+            '''
+            print("Pos reward: ", reward)
+            print("Time reward:", time_reward)
+            print("Flag speed reward:", flag_speed_reward)
+            print("Velocity:", velocity)
+            print("Time taken:", kwargs['elapsed_steps'])
+            '''
 
         #print("Velociy:", velocity / self.max_speed)
 

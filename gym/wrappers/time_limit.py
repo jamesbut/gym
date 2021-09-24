@@ -19,7 +19,10 @@ class TimeLimit(gym.Wrapper):
         #for the reward function
         kwargs = {'elapsed_steps' : self._elapsed_steps,
                   'max_episode_steps' : self._max_episode_steps}
-        observation, reward, done, info = self.env.step(action, **kwargs)
+        try:
+            observation, reward, done, info = self.env.step(action, **kwargs)
+        except TypeError:
+            observation, reward, done, info = self.env.step(action)
 
         self._elapsed_steps += 1
         if self._elapsed_steps >= self._max_episode_steps:
