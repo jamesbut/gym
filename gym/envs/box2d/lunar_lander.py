@@ -37,7 +37,8 @@ from gym import spaces
 from gym.utils import seeding, EzPickle
 
 FPS = 50
-SCALE = 30.0   # affects how fast-paced the game is, forces should be adjusted as well
+# SCALE has been moved to a member variable
+# SCALE = 30.0   # affects how fast-paced the game is, forces should be adjusted as well
 
 MAIN_ENGINE_POWER = 13.0
 SIDE_ENGINE_POWER = 0.6
@@ -90,7 +91,7 @@ class LunarLander(gym.Env, EzPickle):
 
     continuous = False
 
-    def __init__(self):
+    def __init__(self, scale=30.0):
         EzPickle.__init__(self)
         self.seed()
         self.viewer = None
@@ -101,6 +102,8 @@ class LunarLander(gym.Env, EzPickle):
         self.particles = []
 
         self.prev_reward = None
+
+        self.SCALE = scale
 
         # useful range is -1 .. +1, but spikes can be higher
         self.observation_space = spaces.Box(-np.inf, np.inf, shape=(8,), dtype=np.float32)
@@ -138,8 +141,8 @@ class LunarLander(gym.Env, EzPickle):
         self.game_over = False
         self.prev_shaping = None
 
-        W = VIEWPORT_W/SCALE
-        H = VIEWPORT_H/SCALE
+        W = VIEWPORT_W / self.SCALE
+        H = VIEWPORT_H / self.SCALE
 
         # terrain
         CHUNKS = 11
@@ -169,12 +172,12 @@ class LunarLander(gym.Env, EzPickle):
         self.moon.color1 = (0.0, 0.0, 0.0)
         self.moon.color2 = (0.0, 0.0, 0.0)
 
-        initial_y = VIEWPORT_H/SCALE
+        initial_y = VIEWPORT_H / self.SCALE
         self.lander = self.world.CreateDynamicBody(
-            position=(VIEWPORT_W/SCALE/2, initial_y),
+            position=(VIEWPORT_W / self.SCALE / 2, initial_y),
             angle=0.0,
             fixtures = fixtureDef(
-                shape=polygonShape(vertices=[(x/SCALE, y/SCALE) for x, y in LANDER_POLY]),
+                shape=polygonShape(vertices=[(x / self.SCALE, y / self.SCALE) for x, y in LANDER_POLY]),
                 density=5.0,
                 friction=0.1,
                 categoryBits=0x0010,
@@ -191,10 +194,10 @@ class LunarLander(gym.Env, EzPickle):
         self.legs = []
         for i in [-1, +1]:
             leg = self.world.CreateDynamicBody(
-                position=(VIEWPORT_W/SCALE/2 - i*LEG_AWAY/SCALE, initial_y),
+                position=(VIEWPORT_W / self.SCALE / 2 - i * LEG_AWAY / self.SCALE, initial_y),
                 angle=(i * 0.05),
                 fixtures=fixtureDef(
-                    shape=polygonShape(box=(LEG_W/SCALE, LEG_H/SCALE)),
+                    shape=polygonShape(box=(LEG_W / self.SCALE, LEG_H / self.SCALE)),
                     density=1.0,
                     restitution=0.0,
                     categoryBits=0x0020,
@@ -207,7 +210,7 @@ class LunarLander(gym.Env, EzPickle):
                 bodyA=self.lander,
                 bodyB=leg,
                 localAnchorA=(0, 0),
-                localAnchorB=(i * LEG_AWAY/SCALE, LEG_DOWN/SCALE),
+                localAnchorB=(i * LEG_AWAY / self.SCALE, LEG_DOWN / self.SCALE),
                 enableMotor=True,
                 enableLimit=True,
                 maxMotorTorque=LEG_SPRING_TORQUE,
@@ -231,7 +234,7 @@ class LunarLander(gym.Env, EzPickle):
             position = (x, y),
             angle=0.0,
             fixtures = fixtureDef(
-                shape=circleShape(radius=2/SCALE, pos=(0, 0)),
+                shape=circleShape(radius=2/self.SCALE, pos=(0, 0)),
                 density=mass,
                 friction=0.1,
                 categoryBits=0x0100,
@@ -256,7 +259,7 @@ class LunarLander(gym.Env, EzPickle):
         # Engines
         tip  = (math.sin(self.lander.angle), math.cos(self.lander.angle))
         side = (-tip[1], tip[0])
-        dispersion = [self.np_random.uniform(-1.0, +1.0) / SCALE for _ in range(2)]
+        dispersion = [self.np_random.uniform(-1.0, +1.0) / self.SCALE for _ in range(2)]
 
         m_power = 0.0
         if (self.continuous and action[0] > 0.0) or (not self.continuous and action == 2):
@@ -266,9 +269,9 @@ class LunarLander(gym.Env, EzPickle):
                 assert m_power >= 0.5 and m_power <= 1.0
             else:
                 m_power = 1.0
-            ox = (tip[0] * (4/SCALE + 2 * dispersion[0]) +
+            ox = (tip[0] * (4/self.SCALE + 2 * dispersion[0]) +
                   side[0] * dispersion[1])  # 4 is move a bit downwards, +-2 for randomness
-            oy = -tip[1] * (4/SCALE + 2 * dispersion[0]) - side[1] * dispersion[1]
+            oy = -tip[1] * (4/self.SCALE + 2 * dispersion[0]) - side[1] * dispersion[1]
             impulse_pos = (self.lander.position[0] + ox, self.lander.position[1] + oy)
             p = self._create_particle(3.5,  # 3.5 is here to make particle speed adequate
                                       impulse_pos[0],
@@ -291,10 +294,10 @@ class LunarLander(gym.Env, EzPickle):
             else:
                 direction = action-2
                 s_power = 1.0
-            ox = tip[0] * dispersion[0] + side[0] * (3 * dispersion[1] + direction * SIDE_ENGINE_AWAY/SCALE)
-            oy = -tip[1] * dispersion[0] - side[1] * (3 * dispersion[1] + direction * SIDE_ENGINE_AWAY/SCALE)
-            impulse_pos = (self.lander.position[0] + ox - tip[0] * 17/SCALE,
-                           self.lander.position[1] + oy + tip[1] * SIDE_ENGINE_HEIGHT/SCALE)
+            ox = tip[0] * dispersion[0] + side[0] * (3 * dispersion[1] + direction * SIDE_ENGINE_AWAY/self.SCALE)
+            oy = -tip[1] * dispersion[0] - side[1] * (3 * dispersion[1] + direction * SIDE_ENGINE_AWAY/self.SCALE)
+            impulse_pos = (self.lander.position[0] + ox - tip[0] * 17/self.SCALE,
+                           self.lander.position[1] + oy + tip[1] * SIDE_ENGINE_HEIGHT/self.SCALE)
             p = self._create_particle(0.7, impulse_pos[0], impulse_pos[1], s_power)
             p.ApplyLinearImpulse((ox * LEFT_SIDE_ENGINE_POWER * s_power, oy * RIGHT_SIDE_ENGINE_POWER * s_power),
                                  impulse_pos
@@ -308,10 +311,10 @@ class LunarLander(gym.Env, EzPickle):
         pos = self.lander.position
         vel = self.lander.linearVelocity
         state = [
-            (pos.x - VIEWPORT_W/SCALE/2) / (VIEWPORT_W/SCALE/2),
-            (pos.y - (self.helipad_y+LEG_DOWN/SCALE)) / (VIEWPORT_H/SCALE/2),
-            vel.x*(VIEWPORT_W/SCALE/2)/FPS,
-            vel.y*(VIEWPORT_H/SCALE/2)/FPS,
+            (pos.x - VIEWPORT_W/self.SCALE/2) / (VIEWPORT_W/self.SCALE/2),
+            (pos.y - (self.helipad_y+LEG_DOWN/self.SCALE)) / (VIEWPORT_H/self.SCALE/2),
+            vel.x*(VIEWPORT_W/self.SCALE/2)/FPS,
+            vel.y*(VIEWPORT_H/self.SCALE/2)/FPS,
             self.lander.angle,
             20.0*self.lander.angularVelocity/FPS,
             1.0 if self.legs[0].ground_contact else 0.0,
@@ -345,7 +348,7 @@ class LunarLander(gym.Env, EzPickle):
         from gym.envs.classic_control import rendering
         if self.viewer is None:
             self.viewer = rendering.Viewer(VIEWPORT_W, VIEWPORT_H)
-            self.viewer.set_bounds(0, VIEWPORT_W/SCALE, 0, VIEWPORT_H/SCALE)
+            self.viewer.set_bounds(0, VIEWPORT_W/self.SCALE, 0, VIEWPORT_H/self.SCALE)
 
         for obj in self.particles:
             obj.ttl -= 0.15
@@ -372,9 +375,9 @@ class LunarLander(gym.Env, EzPickle):
 
         for x in [self.helipad_x1, self.helipad_x2]:
             flagy1 = self.helipad_y
-            flagy2 = flagy1 + 50/SCALE
+            flagy2 = flagy1 + 50/self.SCALE
             self.viewer.draw_polyline([(x, flagy1), (x, flagy2)], color=(1, 1, 1))
-            self.viewer.draw_polygon([(x, flagy2), (x, flagy2-10/SCALE), (x + 25/SCALE, flagy2 - 5/SCALE)],
+            self.viewer.draw_polygon([(x, flagy2), (x, flagy2-10/self.SCALE), (x + 25/self.SCALE, flagy2 - 5/self.SCALE)],
                                      color=(0.8, 0.8, 0))
 
         return self.viewer.render(return_rgb_array=mode == 'rgb_array')
