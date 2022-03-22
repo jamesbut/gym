@@ -3,6 +3,7 @@ from contextlib import closing
 
 import numpy as np
 from io import StringIO
+import time
 
 from gym import utils
 from gym.envs.toy_text import discrete
@@ -68,6 +69,11 @@ def generate_random_map(size=8, p=0.8):
     return ["".join(x) for x in res]
 
 
+# Calculate manhattan distance from src to dst
+def calculate_manhattan_distance(src: (int, int), dst: (int, int)) -> int:
+    return abs(src[0] - dst[0]) + abs(src[1] - dst[1])
+
+
 class FrozenLakeEnv(discrete.DiscreteEnv):
     """
     Winter is here. You and your friends were tossing around a frisbee at the
@@ -96,7 +102,8 @@ class FrozenLakeEnv(discrete.DiscreteEnv):
 
     metadata = {'render.modes': ['human', 'ansi']}
 
-    def __init__(self, desc=None, map_name="4x4", is_slippery=True):
+    def __init__(self, desc=None, map_name: str = "4x4", is_slippery: bool = True,
+                 reward_fnc: str = 'sparse'):
         if desc is None and map_name is None:
             desc = generate_random_map()
         elif desc is None:
@@ -104,6 +111,10 @@ class FrozenLakeEnv(discrete.DiscreteEnv):
         self.desc = desc = np.asarray(desc, dtype='c')
         self.nrow, self.ncol = nrow, ncol = desc.shape
         self.reward_range = (0, 1)
+        self._reward_fnc = reward_fnc
+
+        # Find goal position
+        self._goal_pos = np.argwhere(self.desc == b'G')[0]
 
         nA = 4
         nS = nrow * ncol
@@ -114,7 +125,7 @@ class FrozenLakeEnv(discrete.DiscreteEnv):
         P = {s: {a: [] for a in range(nA)} for s in range(nS)}
 
         def to_s(row, col):
-            return row*ncol + col
+            return row * ncol + col
 
         def inc(row, col, a):
             if a == LEFT:
@@ -127,12 +138,27 @@ class FrozenLakeEnv(discrete.DiscreteEnv):
                 row = max(row - 1, 0)
             return (row, col)
 
+        # Calculate manhattan distance between
+
         def update_probability_matrix(row, col, action):
             newrow, newcol = inc(row, col, action)
             newstate = to_s(newrow, newcol)
             newletter = desc[newrow, newcol]
             done = bytes(newletter) in b'GH'
-            reward = float(newletter == b'G')
+            reward = 0.
+
+            # Only give reward if done
+            if done:
+                # Sparse reward
+                if self._reward_fnc == 'sparse':
+                    reward = float(newletter == b'G')
+                # Mahattan distance reward
+                elif self._reward_fnc == 'manhattan':
+                    # Find manhattan distance to the goal
+                    reward = -calculate_manhattan_distance(
+                        (newrow, newcol), (self._goal_pos[0], self._goal_pos[1])
+                    )
+
             return newstate, reward, done
 
         for row in range(nrow):
