@@ -138,8 +138,6 @@ class FrozenLakeEnv(discrete.DiscreteEnv):
                 row = max(row - 1, 0)
             return (row, col)
 
-        # Calculate manhattan distance between
-
         def update_probability_matrix(row, col, action):
             newrow, newcol = inc(row, col, action)
             newstate = to_s(newrow, newcol)
@@ -147,17 +145,15 @@ class FrozenLakeEnv(discrete.DiscreteEnv):
             done = bytes(newletter) in b'GH'
             reward = 0.
 
-            # Only give reward if done
-            if done:
-                # Sparse reward
-                if self._reward_fnc == 'sparse':
-                    reward = float(newletter == b'G')
-                # Mahattan distance reward
-                elif self._reward_fnc == 'manhattan':
-                    # Find manhattan distance to the goal
-                    reward = -calculate_manhattan_distance(
-                        (newrow, newcol), (self._goal_pos[0], self._goal_pos[1])
-                    )
+            # Sparse reward
+            if self._reward_fnc == 'sparse':
+                reward = float(newletter == b'G')
+            # Mahattan distance reward
+            elif self._reward_fnc == 'manhattan':
+                # Find manhattan distance to the goal
+                reward = -calculate_manhattan_distance(
+                    (newrow, newcol), (self._goal_pos[0], self._goal_pos[1])
+                )
 
             return newstate, reward, done
 

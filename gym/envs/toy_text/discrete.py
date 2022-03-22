@@ -51,10 +51,16 @@ class DiscreteEnv(Env):
         self.lastaction = None
         return int(self.s)
 
-    def step(self, a):
+    def step(self, a, **kwargs):
         transitions = self.P[self.s][a]
         i = categorical_sample([t[0] for t in transitions], self.np_random)
         p, s, r, d = transitions[i]
+
+        # Only give reward if done or time has elapsed
+        time_elapsed: bool = kwargs['elapsed_steps'] >= kwargs['max_episode_steps'] - 1
+        if not (d or time_elapsed):
+            r = 0.
+
         self.s = s
         self.lastaction = a
         return (int(s), r, d, {"prob": p})
