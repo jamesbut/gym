@@ -151,9 +151,12 @@ class FrozenLakeEnv(discrete.DiscreteEnv):
             # Mahattan distance reward
             elif self._reward_fnc == 'manhattan':
                 # Find manhattan distance to the goal
-                reward = -calculate_manhattan_distance(
-                    (newrow, newcol), (self._goal_pos[0], self._goal_pos[1])
-                )
+                if newletter == b'H':
+                    reward = -10.
+                else:
+                    reward = -calculate_manhattan_distance(
+                        (newrow, newcol), (self._goal_pos[0], self._goal_pos[1])
+                    )
 
             return newstate, reward, done
 
