@@ -119,7 +119,7 @@ class FrozenLakeEnv(discrete.DiscreteEnv):
         # Set given goal position
         if goal_pos:
             # Set old goal to frozen
-            self.desc[self._goal_pos] = b'F'
+            self.desc[self._goal_pos[0], self._goal_pos[1]] = b'F'
             # Set new goal
             self.desc[goal_pos['y'], goal_pos['x']] = b'G'
             self._goal_pos = np.array([goal_pos['y'], goal_pos['x']])
