@@ -103,7 +103,7 @@ class FrozenLakeEnv(discrete.DiscreteEnv):
     metadata = {'render.modes': ['human', 'ansi']}
 
     def __init__(self, desc=None, map_name: str = "4x4", is_slippery: bool = True,
-                 reward_fnc: str = 'sparse'):
+                 reward_fnc: str = 'sparse', goal_pos: dict = None):
         if desc is None and map_name is None:
             desc = generate_random_map()
         elif desc is None:
@@ -115,6 +115,14 @@ class FrozenLakeEnv(discrete.DiscreteEnv):
 
         # Find goal position
         self._goal_pos = np.argwhere(self.desc == b'G')[0]
+
+        # Set given goal position
+        if goal_pos:
+            # Set old goal to frozen
+            self.desc[self._goal_pos] = b'F'
+            # Set new goal
+            self.desc[goal_pos['x'], goal_pos['y']] = b'G'
+            self._goal_pos = np.array([goal_pos['x'], goal_pos['y']])
 
         nA = 4
         nS = nrow * ncol
