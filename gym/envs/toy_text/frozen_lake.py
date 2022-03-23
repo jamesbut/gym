@@ -121,8 +121,8 @@ class FrozenLakeEnv(discrete.DiscreteEnv):
             # Set old goal to frozen
             self.desc[self._goal_pos] = b'F'
             # Set new goal
-            self.desc[goal_pos['x'], goal_pos['y']] = b'G'
-            self._goal_pos = np.array([goal_pos['x'], goal_pos['y']])
+            self.desc[goal_pos['y'], goal_pos['x']] = b'G'
+            self._goal_pos = np.array([goal_pos['y'], goal_pos['x']])
 
         nA = 4
         nS = nrow * ncol
