@@ -166,7 +166,12 @@ class FrozenLakeEnv(discrete.DiscreteEnv):
                         (newrow, newcol), (self._goal_pos[0], self._goal_pos[1])
                     ))
 
-            return newstate, reward, done
+            # Check wether agent has fallen into hole
+            info = {'hole': False}
+            if newletter == b'H':
+                info['hole'] = True
+
+            return newstate, reward, done, info
 
         for row in range(nrow):
             for col in range(ncol):
