@@ -108,6 +108,7 @@ class FrozenLakeEnv(discrete.DiscreteEnv):
             desc = generate_random_map()
         elif desc is None:
             desc = MAPS[map_name]
+        self.map = desc
         self.desc = desc = np.asarray(desc, dtype='c')
         self.nrow, self.ncol = nrow, ncol = desc.shape
         self.reward_range = (0, 1)
@@ -120,8 +121,18 @@ class FrozenLakeEnv(discrete.DiscreteEnv):
         if goal_pos:
             # Set old goal to frozen
             self.desc[self._goal_pos[0], self._goal_pos[1]] = b'F'
+
+            split_row = list(self.map[self._goal_pos[0]])
+            split_row[self._goal_pos[1]] = 'F'
+            self.map[self._goal_pos[0]] = ''.join(split_row)
+
             # Set new goal
             self.desc[goal_pos['y'], goal_pos['x']] = b'G'
+
+            split_row = list(self.map[goal_pos['y']])
+            split_row[goal_pos['x']] = 'G'
+            self.map[goal_pos['y']] = ''.join(split_row)
+
             self._goal_pos = np.array([goal_pos['y'], goal_pos['x']])
 
         nA = 4
